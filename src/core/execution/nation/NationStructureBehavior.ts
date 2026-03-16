@@ -47,6 +47,10 @@ function getStructureRatios(
 ): Partial<Record<UnitType, StructureRatioConfig>> {
   return {
     [UnitType.Port]: { ratioPerCity: 0.75, perceivedCostIncreasePerOwned: 1 },
+    [UnitType.Airport]: {
+      ratioPerCity: 0.5,
+      perceivedCostIncreasePerOwned: 1,
+    },
     [UnitType.Factory]: {
       ratioPerCity: 0.75,
       perceivedCostIncreasePerOwned: 1,
@@ -114,6 +118,7 @@ export class NationStructureBehavior {
       UnitType.DefensePost,
       UnitType.Port,
       UnitType.Factory,
+      UnitType.Airport,
       UnitType.SAMLauncher,
       UnitType.MissileSilo,
     ];
@@ -505,6 +510,8 @@ export class NationStructureBehavior {
         return this.factoryValue();
       case UnitType.Port:
         return this.portValue();
+      case UnitType.Airport:
+        return this.airportValue();
       case UnitType.DefensePost:
         return this.defensePostValue();
       case UnitType.SAMLauncher:
@@ -564,6 +571,51 @@ export class NationStructureBehavior {
       otherTiles.delete(tile);
       const [, closestOtherDist] = closestTile(game, otherTiles, tile);
       w += Math.min(closestOtherDist, structureSpacing);
+
+      return w;
+    };
+  }
+
+  private airportValue(): (tile: TileRef) => number {
+    const game = this.game;
+    const player = this.player;
+    const otherAirports = player.units(UnitType.Airport);
+    const otherPorts = player.units(UnitType.Port);
+    const { structureSpacing, borderSpacing } = this.spacingConstants();
+    const borderTiles = player.borderTiles();
+
+    return (tile) => {
+      let w = 0;
+
+      // Prefer to be away from other airports
+      const airportTiles: Set<TileRef> = new Set(
+        otherAirports.map((u) => u.tile()),
+      );
+      airportTiles.delete(tile);
+      if (airportTiles.size > 0) {
+        const [, closestAirportDist] = closestTile(game, airportTiles, tile);
+        w += Math.min(closestAirportDist, structureSpacing);
+      } else {
+        w += structureSpacing;
+      }
+
+      // Prefer some distance from the border (airports are inland infrastructure)
+      if (borderTiles.size > 0) {
+        const [, closestBorderDist] = closestTile(game, borderTiles, tile);
+        w += Math.min(closestBorderDist, borderSpacing) * 0.5;
+      }
+
+      // Prefer to be away from existing ports (complementary coverage)
+      const portTiles: Set<TileRef> = new Set(
+        otherPorts.map((u) => u.tile()),
+      );
+      if (portTiles.size > 0) {
+        const [, closestPortDist] = closestTile(game, portTiles, tile);
+        w += Math.min(closestPortDist, structureSpacing) * 0.3;
+      }
+
+      // Slight elevation preference
+      w += game.magnitude(tile) * 0.3;
 
       return w;
     };
@@ -950,6 +1002,7 @@ export class NationStructureBehavior {
         case UnitType.Factory:
         case UnitType.MissileSilo:
         case UnitType.Port:
+        case UnitType.Airport:
           protectEntries.push({
             tile: unit.tile(),
             weight: weightByLevel ? unit.level() : 1,
