@@ -132,6 +132,12 @@ export interface Config {
     tradeShipSpawnRejections: number,
     numTradeShips: number,
   ): number;
+  tradeJetGold(dist: number): Gold;
+  tradeJetSpawnRate(
+    tradeJetSpawnRejections: number,
+    numTradeJets: number,
+  ): number;
+  tradeJetShortRangeDebuff(): number;
   trainGold(
     rel: "self" | "team" | "ally" | "other",
     citiesVisited: number,

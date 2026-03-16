@@ -1,9 +1,10 @@
-import { Game } from "../game/Game";
+import { Game, Player } from "../game/Game";
 import { GameMap, TileRef } from "../game/GameMap";
 import { TrainStation } from "../game/TrainStation";
 import { AStarRail } from "./algorithms/AStar.Rail";
 import { AStarWater } from "./algorithms/AStar.Water";
 import { AirPathFinder } from "./PathFinder.Air";
+import { AirSAMAvoidingPathFinder } from "./PathFinder.AirSAMAvoiding";
 import {
   ParabolaOptions,
   ParabolaUniversalPathFinder,
@@ -82,6 +83,17 @@ export class PathFinding {
 
   static Air(game: Game): SteppingPathFinder<TileRef> {
     const pf = new AirPathFinder(game);
+
+    return PathFinderBuilder.create(pf).buildWithStepper({
+      equals: (a, b) => a === b,
+    });
+  }
+
+  static AirSAMAvoiding(
+    game: Game,
+    owner: Player,
+  ): SteppingPathFinder<TileRef> {
+    const pf = new AirSAMAvoidingPathFinder(game, owner);
 
     return PathFinderBuilder.create(pf).buildWithStepper({
       equals: (a, b) => a === b,

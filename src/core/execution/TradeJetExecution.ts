@@ -9,8 +9,12 @@ import {
 } from "../game/Game";
 import { TileRef } from "../game/GameMap";
 import { PathFinding } from "../pathfinding/PathFinder";
+import { AirSAMAvoidingPathFinder } from "../pathfinding/PathFinder.AirSAMAvoiding";
 import { PathStatus, SteppingPathFinder } from "../pathfinding/types";
 import { distSortUnit } from "../Util";
+
+// How many tiles ahead we scan for SAM threats to trigger a path replan
+const SAM_REPLAN_LOOKAHEAD = 80;
 
 export class TradeJetExecution implements Execution {
   private active = true;
@@ -18,9 +22,11 @@ export class TradeJetExecution implements Execution {
   private tradeJet: Unit | undefined;
   private wasCaptured = false;
   private pathFinder: SteppingPathFinder<TileRef>;
+  private samChecker: AirSAMAvoidingPathFinder;
   private tilesTraveled = 0;
   private motionPlanId = 1;
   private motionPlanDst: TileRef | null = null;
+  private lastSamThreatCount = -1;
 
   constructor(
     private origOwner: Player,
@@ -30,11 +36,26 @@ export class TradeJetExecution implements Execution {
 
   init(mg: Game, ticks: number): void {
     this.mg = mg;
-    this.pathFinder = PathFinding.Air(mg);
+    this.samChecker = new AirSAMAvoidingPathFinder(mg, this.origOwner);
+    this.pathFinder = PathFinding.AirSAMAvoiding(mg, this.origOwner);
   }
 
   tick(ticks: number): void {
     if (this.tradeJet === undefined) {
+      // ── Pre-flight safety check ──────────────────────────────────────────
+      // If the route is blocked by an active SAM with no viable bypass,
+      // do NOT spawn the jet — abort silently and let AirportExecution
+      // try again later (it will re-schedule on the next spawn cycle).
+      if (
+        this.samChecker.isRouteBlocked(
+          this.srcAirport.tile(),
+          this._dstAirport.tile(),
+        )
+      ) {
+        this.active = false;
+        return;
+      }
+
       const spawn = this.origOwner.canBuild(
         UnitType.TradeJet,
         this.srcAirport.tile(),
@@ -102,6 +123,36 @@ export class TradeJetExecution implements Execution {
       return;
     }
 
+    // Re-check SAM threats every 20 ticks (cheap: just counts SAMs in area)
+    if (ticks % 20 === 0) {
+      const currentSamThreatCount = this.countNearbyHostileSAMs(curTile);
+      if (currentSamThreatCount !== this.lastSamThreatCount) {
+        this.lastSamThreatCount = currentSamThreatCount;
+
+        // Rebuild the checker and pathfinder with latest SAM state
+        this.samChecker = new AirSAMAvoidingPathFinder(
+          this.mg,
+          this.tradeJet.owner(),
+        );
+        this.pathFinder = PathFinding.AirSAMAvoiding(
+          this.mg,
+          this.tradeJet.owner(),
+        );
+        this.motionPlanDst = null;
+
+        // If the remaining route is now blocked by an active SAM with no
+        // safe bypass, abort the flight — the jet disappears silently
+        // (no gold, no message) so AirportExecution can retry later.
+        if (this.samChecker.isRouteBlocked(curTile, this._dstAirport.tile())) {
+          if (this.tradeJet.isActive()) {
+            this.tradeJet.delete(false);
+          }
+          this.active = false;
+          return;
+        }
+      }
+    }
+
     const dst = this._dstAirport.tile();
     const result = this.pathFinder.next(curTile, dst);
 
@@ -139,6 +190,28 @@ export class TradeJetExecution implements Execution {
         this.active = false;
         return;
     }
+  }
+
+  /**
+   * Count hostile SAMs within lookahead range of the given tile.
+   * Used to detect when the threat environment changes and a replan is needed.
+   */
+  private countNearbyHostileSAMs(tile: TileRef): number {
+    const owner = this.tradeJet!.owner();
+    let count = 0;
+    for (const player of this.mg.players()) {
+      if (player === owner || owner.isFriendly(player)) continue;
+      for (const sam of player.units(UnitType.SAMLauncher)) {
+        if (sam.isUnderConstruction()) continue;
+        if (
+          this.mg.manhattanDist(tile, sam.tile()) <=
+          SAM_REPLAN_LOOKAHEAD + this.mg.config().samRange(sam.level())
+        ) {
+          count++;
+        }
+      }
+    }
+    return count;
   }
 
   private complete() {

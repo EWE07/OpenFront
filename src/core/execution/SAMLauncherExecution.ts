@@ -1,3 +1,4 @@
+import { renderNumber } from "../../client/Utils";
 import {
   Execution,
   Game,
@@ -211,6 +212,9 @@ export class SAMLauncherExecution implements Execution {
 
   private pseudoRandom: PseudoRandom | undefined;
 
+  // Track ally jets that have already paid toll so we only charge once per pass
+  private allyJetsTolled: Set<number> = new Set();
+
   constructor(
     private player: Player,
     private tile: TileRef | null,
@@ -309,6 +313,35 @@ export class SAMLauncherExecution implements Execution {
       }
     }
 
+    // If no nuke target, check for enemy TradeJets in range
+    if (target === null && mirvWarheadTargets.length === 0) {
+      const samRange = this.mg.config().samRange(this.sam.level());
+      const jetTargets = this.mg.nearbyUnits(
+        this.sam.tile(),
+        samRange,
+        UnitType.TradeJet,
+        ({ unit }) => {
+          if (!isUnit(unit)) return false;
+          const samOwner = this.sam!.owner();
+          const jetOwner = unit.owner();
+          // Don't shoot own jets or friendly/allied jets
+          if (jetOwner === samOwner) return false;
+          if (samOwner.isFriendly(jetOwner)) return false;
+          return true;
+        },
+      );
+      if (jetTargets.length > 0) {
+        // Pick the closest jet
+        const closest = jetTargets.reduce((a, b) =>
+          a.distSquared < b.distSquared ? a : b,
+        );
+        target = { unit: closest.unit, tile: closest.unit.tile() };
+      }
+    }
+
+    // Collect toll from allied TradeJets passing through SAM range
+    this.collectAllyJetTolls();
+
     // target is already filtered to exclude nukes targeted by other SAMs
     if (target || mirvWarheadTargets.length > 0) {
       this.sam.launch();
@@ -356,6 +389,66 @@ export class SAMLauncherExecution implements Execution {
       } else {
         throw new Error("target is null");
       }
+    }
+  }
+
+  /**
+   * For each allied TradeJet currently inside this SAM's range:
+   *   - Collect a toll of 50% of the estimated remaining gold once per pass.
+   *   - Remove IDs of jets that have left range so we can re-toll on the next pass.
+   */
+  private collectAllyJetTolls(): void {
+    const sam = this.sam!;
+    const samOwner = sam.owner();
+    const samRange = this.mg.config().samRange(sam.level());
+
+    const allyJetsInRange = this.mg.nearbyUnits(
+      sam.tile(),
+      samRange,
+      UnitType.TradeJet,
+      ({ unit }) => {
+        if (!isUnit(unit)) return false;
+        const jetOwner = unit.owner();
+        // Only allied jets (not own jets)
+        if (jetOwner === samOwner) return false;
+        return samOwner.isFriendly(jetOwner);
+      },
+    );
+
+    // Cleanup: remove jets that have left range from the tolled set
+    const inRangeIds = new Set(allyJetsInRange.map(({ unit }) => unit.id()));
+    for (const id of this.allyJetsTolled) {
+      if (!inRangeIds.has(id)) {
+        this.allyJetsTolled.delete(id);
+      }
+    }
+
+    // Collect toll for jets entering range for the first time
+    for (const { unit: jet } of allyJetsInRange) {
+      if (this.allyJetsTolled.has(jet.id())) continue;
+      this.allyJetsTolled.add(jet.id());
+
+      // Estimate remaining gold: use distance from jet's current tile to destination
+      const dstUnit = jet.targetUnit();
+      if (dstUnit === undefined || !dstUnit.isActive()) continue;
+
+      const remainingDist = this.mg.manhattanDist(jet.tile(), dstUnit.tile());
+      const estimatedGold = this.mg.config().tradeJetGold(remainingDist);
+      const toll = estimatedGold / 2n;
+      if (toll <= 0n) continue;
+
+      samOwner.addGold(toll, sam.tile());
+
+      this.mg.displayMessage(
+        "events_display.received_gold_from_trade",
+        MessageType.RECEIVED_GOLD_FROM_TRADE,
+        samOwner.id(),
+        toll,
+        {
+          gold: renderNumber(toll),
+          name: jet.owner().displayName(),
+        },
+      );
     }
   }
 
