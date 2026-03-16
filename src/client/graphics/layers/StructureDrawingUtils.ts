@@ -25,6 +25,7 @@ export const STRUCTURE_SHAPES: Partial<Record<UnitType, ShapeType>> = {
   [UnitType.AtomBomb]: "cross",
   [UnitType.HydrogenBomb]: "cross",
   [UnitType.MIRV]: "cross",
+  [UnitType.Airport]: "hexagon",
 };
 export const LEVEL_SCALE_FACTOR = 3;
 export const ICON_SCALE_FACTOR_ZOOMED_IN = 3.5;
@@ -38,6 +39,7 @@ export const ICON_SIZE = {
   square: 28,
   triangle: 28,
   cross: 20,
+  hexagon: 30,
 };
 export const OFFSET_ZOOM_Y = 4;
 
@@ -47,7 +49,8 @@ export type ShapeType =
   | "pentagon"
   | "octagon"
   | "circle"
-  | "cross";
+  | "cross"
+  | "hexagon";
 
 export class SpriteFactory {
   private theme: Theme;
@@ -66,6 +69,7 @@ export class SpriteFactory {
     [UnitType.Port, { iconPath: anchorIcon, image: null }],
     [UnitType.MissileSilo, { iconPath: missileSiloIcon, image: null }],
     [UnitType.SAMLauncher, { iconPath: SAMMissileIcon, image: null }],
+    [UnitType.Airport, { iconPath: anchorIcon, image: null }], // reuses anchor as placeholder; replace with airplaneIcon when asset is added
   ]);
   constructor(
     theme: Theme,
@@ -396,6 +400,28 @@ export class SpriteFactory {
         break;
       }
 
+      case "hexagon": {
+        const cx = halfIconSize;
+        const cy = halfIconSize;
+        const r = halfIconSize - 1;
+        const step = (Math.PI * 2) / 6;
+        context.beginPath();
+        for (let i = 0; i < 6; i++) {
+          const angle = step * i - Math.PI / 6;
+          const x = cx + r * Math.cos(angle);
+          const y = cy + r * Math.sin(angle);
+          if (i === 0) {
+            context.moveTo(x, y);
+          } else {
+            context.lineTo(x, y);
+          }
+        }
+        context.closePath();
+        context.fill();
+        context.stroke();
+        break;
+      }
+
       case "circle":
         context.beginPath();
         context.arc(
@@ -423,6 +449,7 @@ export class SpriteFactory {
         pentagon: [7, 7],
         circle: [6, 6],
         cross: [0, 0],
+        hexagon: [7, 7],
       };
       const [offsetX, offsetY] = SHAPE_OFFSETS[shape] || [0, 0];
       context.drawImage(
