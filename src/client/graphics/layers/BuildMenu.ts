@@ -36,6 +36,8 @@ import atomBombIcon from "/images/NukeIconWhite.svg?url";
 import portIcon from "/images/PortIcon.svg?url";
 import samlauncherIcon from "/images/SamLauncherIconWhite.svg?url";
 import shieldIcon from "/images/ShieldIconWhite.svg?url";
+// Airport uses the port icon as a placeholder until a dedicated asset is added
+const airportIcon = portIcon;
 
 export interface BuildItemDisplay {
   unitType: PlayerBuildableUnitType;
@@ -115,6 +117,13 @@ export const buildTable: BuildItemDisplay[][] = [
       icon: factoryIcon,
       description: "build_menu.desc.factory",
       key: "unit_type.factory",
+      countable: true,
+    },
+    {
+      unitType: UnitType.Airport,
+      icon: airportIcon,
+      description: "build_menu.desc.airport",
+      key: "unit_type.airport",
       countable: true,
     },
   ],
