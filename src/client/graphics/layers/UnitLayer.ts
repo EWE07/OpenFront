@@ -342,6 +342,9 @@ export class UnitLayer implements Layer {
       case UnitType.TradeShip:
         this.handleTradeShipEvent(unit);
         break;
+      case UnitType.TradeJet:
+        this.handleTradeJetEvent(unit);
+        break;
       case UnitType.Train:
         this.handleTrainEvent(unit);
         break;
@@ -503,6 +506,10 @@ export class UnitLayer implements Layer {
     this.drawSprite(unit);
   }
 
+  private handleTradeJetEvent(unit: UnitView) {
+    this.drawSprite(unit);
+  }
+
   private handleTrainEvent(unit: UnitView) {
     this.drawSprite(unit);
   }
@@ -569,7 +576,11 @@ export class UnitLayer implements Layer {
     if (this.alternateView) {
       let rel = this.relationship(unit);
       const dstPortId = unit.targetUnitId();
-      if (unit.type() === UnitType.TradeShip && dstPortId !== undefined) {
+      if (
+        (unit.type() === UnitType.TradeShip ||
+          unit.type() === UnitType.TradeJet) &&
+        dstPortId !== undefined
+      ) {
         const target = this.game.unit(dstPortId)?.owner();
         const myPlayer = this.game.myPlayer();
         if (myPlayer !== null && target !== undefined) {
