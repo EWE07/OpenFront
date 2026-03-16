@@ -1162,6 +1162,8 @@ export class PlayerImpl implements Player {
         return canBuildTransportShip(this.mg, this, targetTile);
       case UnitType.TradeShip:
         return this.tradeShipSpawn(targetTile);
+      case UnitType.TradeJet:
+        return this.tradeJetSpawn(targetTile);
       case UnitType.Train:
         return this.landBasedUnitSpawn(targetTile);
       case UnitType.MissileSilo:
@@ -1169,6 +1171,7 @@ export class PlayerImpl implements Player {
       case UnitType.SAMLauncher:
       case UnitType.City:
       case UnitType.Factory:
+      case UnitType.Airport:
         return this.landBasedStructureSpawn(targetTile, validTiles);
       default:
         assertNever(unitType);
@@ -1314,6 +1317,12 @@ export class PlayerImpl implements Player {
 
   tradeShipSpawn(targetTile: TileRef): TileRef | false {
     return this.units(UnitType.Port).find((u) => u.tile() === targetTile)
+      ? targetTile
+      : false;
+  }
+
+  tradeJetSpawn(targetTile: TileRef): TileRef | false {
+    return this.units(UnitType.Airport).find((u) => u.tile() === targetTile)
       ? targetTile
       : false;
   }
