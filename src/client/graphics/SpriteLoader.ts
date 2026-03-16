@@ -37,11 +37,43 @@ const SPRITE_CONFIG: Partial<Record<UnitType | TrainTypeSprite, string>> = {
 
 const spriteMap: Map<UnitType | TrainTypeSprite, ImageBitmap> = new Map();
 
+/** Generate a simple airplane bitmap for the TradeJet unit */
+function createTradeJetBitmap(): Promise<ImageBitmap> {
+  const size = 12;
+  const canvas = document.createElement("canvas");
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext("2d")!;
+
+  // Body: center rectangle (grey 180,180,180 = territory color slot)
+  ctx.fillStyle = "rgb(180,180,180)";
+  // Fuselage
+  ctx.fillRect(5, 2, 2, 8);
+  // Wings
+  ctx.fillRect(1, 5, 10, 2);
+  // Tail
+  ctx.fillRect(3, 9, 2, 2);
+  ctx.fillRect(7, 9, 2, 2);
+  // Nose tip (dark 70,70,70 = border color slot)
+  ctx.fillStyle = "rgb(70,70,70)";
+  ctx.fillRect(5, 1, 2, 2);
+
+  return createImageBitmap(canvas);
+}
+
 // preload all images
 export const loadAllSprites = async (): Promise<void> => {
   const entries = Object.entries(SPRITE_CONFIG);
   const totalSprites = entries.length;
   let loadedCount = 0;
+
+  // Generate TradeJet bitmap programmatically
+  try {
+    const tradeJetBitmap = await createTradeJetBitmap();
+    spriteMap.set(UnitType.TradeJet, tradeJetBitmap);
+  } catch (err) {
+    console.error("Failed to generate TradeJet sprite:", err);
+  }
 
   await Promise.all(
     entries.map(async ([unitType, url]) => {
