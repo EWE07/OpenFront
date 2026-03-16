@@ -313,13 +313,13 @@ export class SAMLauncherExecution implements Execution {
       }
     }
 
-    // If no nuke target, check for enemy TradeJets in range
+    // If no nuke target, check for enemy TradeJets or AirTransports in range
     if (target === null && mirvWarheadTargets.length === 0) {
       const samRange = this.mg.config().samRange(this.sam.level());
       const jetTargets = this.mg.nearbyUnits(
         this.sam.tile(),
         samRange,
-        UnitType.TradeJet,
+        [UnitType.TradeJet, UnitType.AirTransport],
         ({ unit }) => {
           if (!isUnit(unit)) return false;
           const samOwner = this.sam!.owner();
@@ -405,7 +405,7 @@ export class SAMLauncherExecution implements Execution {
     const allyJetsInRange = this.mg.nearbyUnits(
       sam.tile(),
       samRange,
-      UnitType.TradeJet,
+      [UnitType.TradeJet, UnitType.AirTransport],
       ({ unit }) => {
         if (!isUnit(unit)) return false;
         const jetOwner = unit.owner();
@@ -427,6 +427,9 @@ export class SAMLauncherExecution implements Execution {
     for (const { unit: jet } of allyJetsInRange) {
       if (this.allyJetsTolled.has(jet.id())) continue;
       this.allyJetsTolled.add(jet.id());
+
+      // Only collect gold toll from trade jets, not military air transports
+      if (jet.type() !== UnitType.TradeJet) continue;
 
       // Estimate remaining gold: use distance from jet's current tile to destination
       const dstUnit = jet.targetUnit();

@@ -36,8 +36,20 @@ import atomBombIcon from "/images/NukeIconWhite.svg?url";
 import portIcon from "/images/PortIcon.svg?url";
 import samlauncherIcon from "/images/SamLauncherIconWhite.svg?url";
 import shieldIcon from "/images/ShieldIconWhite.svg?url";
-// Airport uses the port icon as a placeholder until a dedicated asset is added
-const airportIcon = portIcon;
+
+// Airport icon — inline SVG airplane, no external file needed
+const airportIcon =
+  "data:image/svg+xml;utf8," +
+  encodeURIComponent(
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white">` +
+      // Fuselage
+      `<ellipse cx="12" cy="12" rx="2" ry="8"/>` +
+      // Main wings
+      `<polygon points="12,7 1,17 5,17 12,14 19,17 23,17"/>` +
+      // Tail fins
+      `<polygon points="12,18 8,22 10,22 12,20 14,22 16,22"/>` +
+      `</svg>`,
+  );
 
 export interface BuildItemDisplay {
   unitType: PlayerBuildableUnitType;
@@ -122,8 +134,8 @@ export const buildTable: BuildItemDisplay[][] = [
     {
       unitType: UnitType.Airport,
       icon: airportIcon,
-      description: "build_menu.desc.airport",
-      key: "unit_type.airport",
+      description: "Spawns trade jets that fly to allied airports for gold",
+      key: "Airport",
       countable: true,
     },
   ],

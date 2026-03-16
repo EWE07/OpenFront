@@ -283,6 +283,7 @@ export enum UnitType {
   Factory = "Factory",
   Airport = "Airport",
   TradeJet = "Trade Jet",
+  AirTransport = "Air Transport",
 }
 
 export enum TrainType {
@@ -386,6 +387,11 @@ export interface UnitParamsMap {
 
   [UnitType.TradeJet]: {
     targetUnit: Unit;
+  };
+
+  [UnitType.AirTransport]: {
+    troops?: number;
+    targetTile?: TileRef;
   };
 
   [UnitType.MIRV]: {

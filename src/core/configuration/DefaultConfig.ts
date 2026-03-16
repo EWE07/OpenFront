@@ -473,6 +473,11 @@ export class DefaultConfig implements Config {
           cost: () => 0n,
         };
         break;
+      case UnitType.AirTransport:
+        info = {
+          cost: () => 0n,
+        };
+        break;
       case UnitType.Train:
         info = {
           cost: () => 0n,

@@ -44,12 +44,14 @@ export class SAMMissileExecution implements Execution {
     }
     // Mirv warheads are too fast, and mirv shouldn't be stopped ever
     const nukesWhitelist = [UnitType.AtomBomb, UnitType.HydrogenBomb];
-    const isTradeJet = this.target.type() === UnitType.TradeJet;
+    const isAirUnit =
+      this.target.type() === UnitType.TradeJet ||
+      this.target.type() === UnitType.AirTransport;
     if (
       !this.target.isActive() ||
       !this.ownerUnit.isActive() ||
       this.target.owner() === this.SAMMissile.owner() ||
-      (!nukesWhitelist.includes(this.target.type()) && !isTradeJet)
+      (!nukesWhitelist.includes(this.target.type()) && !isAirUnit)
     ) {
       // Clear the flag so other SAMs can re-target this nuke
       if (this.target.isActive()) {
@@ -60,8 +62,8 @@ export class SAMMissileExecution implements Execution {
       return;
     }
     for (let i = 0; i < this.speed; i++) {
-      // For moving targets (TradeJet), always aim at current position
-      if (isTradeJet && this.target.isActive()) {
+      // For moving targets (air units), always aim at current position
+      if (isAirUnit && this.target.isActive()) {
         this.targetTile = this.target.tile();
       }
       const result = this.pathFinder.next(
@@ -79,8 +81,8 @@ export class SAMMissileExecution implements Execution {
         this.active = false;
         this.target.delete(true, this._owner);
         this.SAMMissile.delete(false);
-        // Record stats only for nukes (TradeJet is not a NukeType)
-        if (!isTradeJet) {
+        // Record stats only for nukes (air units are not NukeType)
+        if (!isAirUnit) {
           this.mg
             .stats()
             .bombIntercept(this._owner, this.target.type() as NukeType, 1);

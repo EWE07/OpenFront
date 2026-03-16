@@ -2,6 +2,7 @@ import { Execution, Game } from "../game/Game";
 import { PseudoRandom } from "../PseudoRandom";
 import { ClientID, GameID, StampedIntent, Turn } from "../Schemas";
 import { simpleHash } from "../Util";
+import { AirTransportExecution } from "./AirTransportExecution";
 import { AllianceExtensionExecution } from "./alliance/AllianceExtensionExecution";
 import { AllianceRejectExecution } from "./alliance/AllianceRejectExecution";
 import { AllianceRequestExecution } from "./alliance/AllianceRequestExecution";
@@ -73,6 +74,8 @@ export class Executor {
         return new SpawnExecution(this.gameID, player.info(), intent.tile);
       case "boat":
         return new TransportShipExecution(player, intent.dst, intent.troops);
+      case "air_attack":
+        return new AirTransportExecution(player, intent.dst, intent.troops);
       case "allianceRequest":
         return new AllianceRequestExecution(player, intent.recipient);
       case "allianceReject":

@@ -69,7 +69,7 @@ export class SpriteFactory {
     [UnitType.Port, { iconPath: anchorIcon, image: null }],
     [UnitType.MissileSilo, { iconPath: missileSiloIcon, image: null }],
     [UnitType.SAMLauncher, { iconPath: SAMMissileIcon, image: null }],
-    [UnitType.Airport, { iconPath: anchorIcon, image: null }], // reuses anchor as placeholder; replace with airplaneIcon when asset is added
+    // Airport draws its symbol directly via drawAirplaneSymbol — no image entry needed
   ]);
   constructor(
     theme: Theme,
@@ -441,7 +441,14 @@ export class SpriteFactory {
 
     const structureInfo = this.structuresInfos.get(structureType);
 
-    if (structureInfo?.image && renderIcon) {
+    // For Airport: draw a canvas airplane symbol directly (no external image needed)
+    if (structureType === UnitType.Airport && renderIcon) {
+      this.drawAirplaneSymbol(
+        context,
+        iconSize,
+        owner.structureColors().dark.toRgbString(),
+      );
+    } else if (structureInfo?.image && renderIcon) {
       const SHAPE_OFFSETS = {
         triangle: [6, 11],
         square: [5, 5],
@@ -527,6 +534,55 @@ export class SpriteFactory {
     parentContainer.scale.set(this.transformHandler.scale);
     stage.addChild(parentContainer);
     return parentContainer;
+  }
+
+  /**
+   * Draws a top-down airplane ✈ symbol centered in the icon using canvas 2D.
+   * No external image file needed — pure canvas paths.
+   */
+  private drawAirplaneSymbol(
+    ctx: CanvasRenderingContext2D,
+    iconSize: number,
+    color: string,
+  ): void {
+    const cx = iconSize / 2;
+    const cy = iconSize / 2;
+    const s = iconSize * 0.33; // scale relative to icon size
+
+    ctx.save();
+    ctx.fillStyle = color;
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 0.5;
+    ctx.translate(cx, cy);
+
+    // ── Fuselage (vertical elongated ellipse) ──
+    ctx.beginPath();
+    ctx.ellipse(0, 0, s * 0.18, s * 0.72, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // ── Main wings (wide swept wings) ──
+    ctx.beginPath();
+    ctx.moveTo(0, -s * 0.05); // center top
+    ctx.lineTo(-s * 0.92, s * 0.38); // left wingtip
+    ctx.lineTo(-s * 0.55, s * 0.42); // left wing inner trailing
+    ctx.lineTo(0, s * 0.18); // center trailing
+    ctx.lineTo(s * 0.55, s * 0.42); // right wing inner trailing
+    ctx.lineTo(s * 0.92, s * 0.38); // right wingtip
+    ctx.closePath();
+    ctx.fill();
+
+    // ── Tail fins ──
+    ctx.beginPath();
+    ctx.moveTo(0, s * 0.42); // center
+    ctx.lineTo(-s * 0.38, s * 0.72); // left tail
+    ctx.lineTo(-s * 0.12, s * 0.62); // left inner
+    ctx.lineTo(0, s * 0.55); // center join
+    ctx.lineTo(s * 0.12, s * 0.62); // right inner
+    ctx.lineTo(s * 0.38, s * 0.72); // right tail
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.restore();
   }
 
   private getImageColored(

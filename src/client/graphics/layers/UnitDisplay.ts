@@ -28,6 +28,17 @@ import portIcon from "/images/PortIcon.svg?url";
 import samLauncherIcon from "/images/SamLauncherIconWhite.svg?url";
 import defensePostIcon from "/images/ShieldIconWhite.svg?url";
 
+// Airport icon — inline SVG airplane, same as BuildMenu.ts
+const airportIcon =
+  "data:image/svg+xml;utf8," +
+  encodeURIComponent(
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white">` +
+      `<ellipse cx="12" cy="12" rx="2" ry="8"/>` +
+      `<polygon points="12,7 1,17 5,17 12,14 19,17 23,17"/>` +
+      `<polygon points="12,18 8,22 10,22 12,20 14,22 16,22"/>` +
+      `</svg>`,
+  );
+
 @customElement("unit-display")
 export class UnitDisplay extends LitElement implements Layer {
   public game: GameView;
@@ -42,6 +53,7 @@ export class UnitDisplay extends LitElement implements Layer {
   private _port = 0;
   private _defensePost = 0;
   private _samLauncher = 0;
+  private _airport = 0;
   private allDisabled = false;
   private _hoveredUnit: PlayerBuildableUnitType | null = null;
 
@@ -108,6 +120,7 @@ export class UnitDisplay extends LitElement implements Layer {
     this._samLauncher = player.totalUnitLevels(UnitType.SAMLauncher);
     this._factories = player.totalUnitLevels(UnitType.Factory);
     this._warships = player.totalUnitLevels(UnitType.Warship);
+    this._airport = player.totalUnitLevels(UnitType.Airport);
     this.requestUpdate();
   }
 
@@ -152,11 +165,11 @@ export class UnitDisplay extends LitElement implements Layer {
             this.keybinds["buildPort"]?.key ?? "3",
           )}
           ${this.renderUnitItem(
-            defensePostIcon,
-            this._defensePost,
-            UnitType.DefensePost,
-            "defense_post",
-            this.keybinds["buildDefensePost"]?.key ?? "4",
+            airportIcon,
+            this._airport,
+            UnitType.Airport,
+            "airport",
+            this.keybinds["buildAirport"]?.key ?? "4",
           )}
           ${this.renderUnitItem(
             missileSiloIcon,
@@ -199,6 +212,13 @@ export class UnitDisplay extends LitElement implements Layer {
             UnitType.MIRV,
             "mirv",
             this.keybinds["buildMIRV"]?.key ?? "0",
+          )}
+          ${this.renderUnitItem(
+            defensePostIcon,
+            this._defensePost,
+            UnitType.DefensePost,
+            "defense_post",
+            this.keybinds["buildDefensePost"]?.key ?? "'",
           )}
         </div>
       </div>

@@ -24,8 +24,6 @@ export class TradeJetExecution implements Execution {
   private pathFinder: SteppingPathFinder<TileRef>;
   private samChecker: AirSAMAvoidingPathFinder;
   private tilesTraveled = 0;
-  private motionPlanId = 1;
-  private motionPlanDst: TileRef | null = null;
   private lastSamThreatCount = -1;
 
   constructor(
@@ -138,7 +136,6 @@ export class TradeJetExecution implements Execution {
           this.mg,
           this.tradeJet.owner(),
         );
-        this.motionPlanDst = null;
 
         // If the remaining route is now blocked by an active SAM with no
         // safe bypass, abort the flight — the jet disappears silently
@@ -153,42 +150,36 @@ export class TradeJetExecution implements Execution {
       }
     }
 
-    const dst = this._dstAirport.tile();
-    const result = this.pathFinder.next(curTile, dst);
+    // Speed: tiles moved per tick (3 = 3x faster than a trade ship)
+    const JET_SPEED = 3;
 
-    switch (result.status) {
-      case PathStatus.NEXT: {
-        if (dst !== this.motionPlanDst) {
-          this.motionPlanId++;
-          const from = result.node;
-          const path = this.pathFinder.findPath(from, dst) ?? [from];
-          if (path.length === 0 || path[0] !== from) {
-            path.unshift(from);
-          }
-          this.mg.recordMotionPlan({
-            kind: "grid",
-            unitId: this.tradeJet.id(),
-            planId: this.motionPlanId,
-            startTick: ticks + 1,
-            ticksPerStep: 1,
-            path,
-          });
-          this.motionPlanDst = dst;
-        }
-        this.tradeJet.move(result.node);
-        this.tilesTraveled++;
-        break;
-      }
-      case PathStatus.COMPLETE:
+    const dst = this._dstAirport.tile();
+
+    for (let step = 0; step < JET_SPEED; step++) {
+      const curPos = this.tradeJet.tile();
+      if (curPos === dst) {
         this.complete();
         return;
-      case PathStatus.NOT_FOUND:
-        console.warn("trade jet cannot find route");
-        if (this.tradeJet.isActive()) {
-          this.tradeJet.delete(false);
-        }
-        this.active = false;
-        return;
+      }
+
+      const result = this.pathFinder.next(curPos, dst);
+
+      switch (result.status) {
+        case PathStatus.NEXT:
+          this.tradeJet.move(result.node);
+          this.tilesTraveled++;
+          break;
+        case PathStatus.COMPLETE:
+          this.complete();
+          return;
+        case PathStatus.NOT_FOUND:
+          console.warn("trade jet cannot find route");
+          if (this.tradeJet.isActive()) {
+            this.tradeJet.delete(false);
+          }
+          this.active = false;
+          return;
+      }
     }
   }
 

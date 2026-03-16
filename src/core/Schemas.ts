@@ -32,6 +32,7 @@ export type Intent =
   | AttackIntent
   | CancelAttackIntent
   | BoatAttackIntent
+  | AirAttackIntent
   | CancelBoatIntent
   | AllianceRequestIntent
   | AllianceRejectIntent
@@ -57,6 +58,7 @@ export type AttackIntent = z.infer<typeof AttackIntentSchema>;
 export type CancelAttackIntent = z.infer<typeof CancelAttackIntentSchema>;
 export type SpawnIntent = z.infer<typeof SpawnIntentSchema>;
 export type BoatAttackIntent = z.infer<typeof BoatAttackIntentSchema>;
+export type AirAttackIntent = z.infer<typeof AirAttackIntentSchema>;
 export type EmbargoAllIntent = z.infer<typeof EmbargoAllIntentSchema>;
 export type CancelBoatIntent = z.infer<typeof CancelBoatIntentSchema>;
 export type AllianceRequestIntent = z.infer<typeof AllianceRequestIntentSchema>;
@@ -318,6 +320,12 @@ export const BoatAttackIntentSchema = z.object({
   dst: z.number(),
 });
 
+export const AirAttackIntentSchema = z.object({
+  type: z.literal("air_attack"),
+  troops: z.number().nonnegative(),
+  dst: z.number(),
+});
+
 export const AllianceRequestIntentSchema = z.object({
   type: z.literal("allianceRequest"),
   recipient: ID,
@@ -435,6 +443,7 @@ const IntentSchema = z.discriminatedUnion("type", [
   SpawnIntentSchema,
   MarkDisconnectedIntentSchema,
   BoatAttackIntentSchema,
+  AirAttackIntentSchema,
   CancelBoatIntentSchema,
   AllianceRequestIntentSchema,
   AllianceRejectIntentSchema,

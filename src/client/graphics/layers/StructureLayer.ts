@@ -69,6 +69,11 @@ export class StructureLayer implements Layer {
       borderRadius: BASE_BORDER_RADIUS * RADIUS_SCALE_FACTOR,
       territoryRadius: BASE_TERRITORY_RADIUS * RADIUS_SCALE_FACTOR,
     },
+    [UnitType.Airport]: {
+      icon: "", // set dynamically in constructor from generated canvas
+      borderRadius: BASE_BORDER_RADIUS * RADIUS_SCALE_FACTOR,
+      territoryRadius: BASE_TERRITORY_RADIUS * RADIUS_SCALE_FACTOR,
+    },
   };
 
   constructor(
@@ -81,7 +86,69 @@ export class StructureLayer implements Layer {
     const tempContext = this.tempCanvas.getContext("2d");
     if (tempContext === null) throw new Error("2d context not supported");
     this.tempContext = tempContext;
+
+    // Generate the Airport icon as a data URL (no external PNG needed)
+    this.generateAndLoadAirportIcon();
+
     this.loadIconData();
+  }
+
+  /**
+   * Draws a top-down airplane on a 64×64 canvas and loads it as an
+   * HTMLImageElement, then registers it for the Airport unit type.
+   */
+  private generateAndLoadAirportIcon(): void {
+    const size = 64;
+    const c = document.createElement("canvas");
+    c.width = size;
+    c.height = size;
+    const ctx = c.getContext("2d")!;
+    const cx = size / 2;
+    const cy = size / 2;
+    const s = size * 0.33;
+
+    ctx.clearRect(0, 0, size, size);
+    ctx.fillStyle = "white";
+    ctx.strokeStyle = "white";
+    ctx.lineWidth = 1;
+    ctx.save();
+    ctx.translate(cx, cy);
+
+    // Fuselage
+    ctx.beginPath();
+    ctx.ellipse(0, 0, s * 0.18, s * 0.72, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Main wings
+    ctx.beginPath();
+    ctx.moveTo(0, -s * 0.05);
+    ctx.lineTo(-s * 0.92, s * 0.38);
+    ctx.lineTo(-s * 0.55, s * 0.42);
+    ctx.lineTo(0, s * 0.18);
+    ctx.lineTo(s * 0.55, s * 0.42);
+    ctx.lineTo(s * 0.92, s * 0.38);
+    ctx.closePath();
+    ctx.fill();
+
+    // Tail fins
+    ctx.beginPath();
+    ctx.moveTo(0, s * 0.42);
+    ctx.lineTo(-s * 0.38, s * 0.72);
+    ctx.lineTo(-s * 0.12, s * 0.62);
+    ctx.lineTo(0, s * 0.55);
+    ctx.lineTo(s * 0.12, s * 0.62);
+    ctx.lineTo(s * 0.38, s * 0.72);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.restore();
+
+    const dataUrl = c.toDataURL("image/png");
+    const img = new Image();
+    img.src = dataUrl;
+    img.onload = () => {
+      this.unitIcons.set(UnitType.Airport, img);
+    };
   }
 
   private loadIcon(unitType: string, config: UnitRenderConfig) {
@@ -100,6 +167,8 @@ export class StructureLayer implements Layer {
 
   private loadIconData() {
     Object.entries(this.unitConfigs).forEach(([unitType, config]) => {
+      // Airport icon is generated programmatically in generateAndLoadAirportIcon
+      if (unitType === UnitType.Airport) return;
       this.loadIcon(unitType, config);
     });
   }

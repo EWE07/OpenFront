@@ -2,6 +2,7 @@ import { EventBus } from "../../../core/EventBus";
 import { TileRef } from "../../../core/game/GameMap";
 import { PlayerView } from "../../../core/game/GameView";
 import {
+  SendAirAttackIntentEvent,
   SendAllianceExtensionIntentEvent,
   SendAllianceRequestIntentEvent,
   SendAttackIntentEvent,
@@ -35,6 +36,15 @@ export class PlayerActionHandler {
   handleBoatAttack(player: PlayerView, targetTile: TileRef) {
     this.eventBus.emit(
       new SendBoatAttackIntentEvent(
+        targetTile,
+        this.uiState.attackRatio * player.troops(),
+      ),
+    );
+  }
+
+  handleAirAttack(player: PlayerView, targetTile: TileRef) {
+    this.eventBus.emit(
+      new SendAirAttackIntentEvent(
         targetTile,
         this.uiState.attackRatio * player.troops(),
       ),

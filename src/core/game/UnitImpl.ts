@@ -282,6 +282,9 @@ export class UnitImpl implements Unit {
             .stats()
             .boatDestroyTroops(destroyer, this._owner, this._troops);
           break;
+        case UnitType.AirTransport:
+          // Air transport destroyed — troops lost silently
+          break;
         case UnitType.TradeShip:
           this.mg.stats().boatDestroyTrade(destroyer, this._owner);
           break;

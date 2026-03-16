@@ -33,6 +33,17 @@ import targetIcon from "/images/TargetIconWhite.svg?url";
 import traitorIcon from "/images/TraitorIconWhite.svg?url";
 import xIcon from "/images/XIcon.svg?url";
 
+// Airplane icon for air attack — inline SVG, no external file needed
+const airAttackIcon =
+  "data:image/svg+xml;utf8," +
+  encodeURIComponent(
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white">` +
+      `<ellipse cx="12" cy="12" rx="2" ry="8"/>` +
+      `<polygon points="12,7 1,17 5,17 12,14 19,17 23,17"/>` +
+      `<polygon points="12,18 8,22 10,22 12,20 14,22 16,22"/>` +
+      `</svg>`,
+  );
+
 export interface MenuElementParams {
   myPlayer: PlayerView;
   selected: PlayerView | null;
@@ -85,6 +96,7 @@ export const COLORS = {
   build: "#e6c74a",
   building: "#1e3a5f",
   boat: "#2a82c9",
+  air: "#60a5fa",
   ally: "#4ade80",
   breakAlly: "#dc2626",
   breakAllyNoDebuff: "#d97706",
@@ -114,6 +126,7 @@ export const COLORS = {
 export enum Slot {
   Info = "info",
   Boat = "boat",
+  AirAttack = "air_attack",
   Build = "build",
   Attack = "attack",
   Ally = "ally",
@@ -598,6 +611,26 @@ export const boatMenuElement: MenuElement = {
   },
 };
 
+export const airAttackMenuElement: MenuElement = {
+  id: Slot.AirAttack,
+  name: "air_attack",
+  // Only enabled when player has at least one fully built airport
+  disabled: (params: MenuElementParams) =>
+    !params.myPlayer
+      .units(UnitType.Airport)
+      .some((a) => !a.isUnderConstruction()),
+  icon: airAttackIcon,
+  color: COLORS.air,
+  tooltipItems: [
+    { text: "Air Invasion", className: "title" },
+    { text: "Send troops by air (requires Airport)", className: "description" },
+  ],
+  action: async (params: MenuElementParams) => {
+    params.playerActionHandler.handleAirAttack(params.myPlayer, params.tile);
+    params.closeMenu();
+  },
+};
+
 export const centerButtonElement: CenterButtonElement = {
   disabled: (params: MenuElementParams): boolean => {
     const tileOwner = params.game.owner(params.tile);
@@ -670,6 +703,7 @@ export const rootMenuElement: MenuElement = {
         ? [deleteUnitElement, allyRequestElement, buildMenuElement]
         : [
             isAllied && !isDisconnected ? allyBreakElement : boatMenuElement,
+            airAttackMenuElement,
             inExtensionWindow ? allyExtendElement : allyRequestElement,
             isFriendlyTarget(params) && !isDisconnected
               ? donateGoldRadialElement

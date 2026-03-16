@@ -229,13 +229,14 @@ export class InputHandler {
       buildCity: "Digit1",
       buildFactory: "Digit2",
       buildPort: "Digit3",
-      buildDefensePost: "Digit4",
+      buildDefensePost: "Quote",
       buildMissileSilo: "Digit5",
       buildSamLauncher: "Digit6",
       buildWarship: "Digit7",
       buildAtomBomb: "Digit8",
       buildHydrogenBomb: "Digit9",
       buildMIRV: "Digit0",
+      buildAirport: "Digit4",
       ...saved,
     };
 
@@ -638,6 +639,7 @@ export class InputHandler {
       { key: "buildHydrogenBomb", type: UnitType.HydrogenBomb },
       { key: "buildWarship", type: UnitType.Warship },
       { key: "buildMIRV", type: UnitType.MIRV },
+      { key: "buildAirport", type: UnitType.Airport },
     ];
     for (const { key, type } of buildKeybinds) {
       if (this.buildKeybindMatches(code, this.keybinds[key])) return type;

@@ -81,6 +81,13 @@ export class SendBoatAttackIntentEvent implements GameEvent {
   ) {}
 }
 
+export class SendAirAttackIntentEvent implements GameEvent {
+  constructor(
+    public readonly dst: TileRef,
+    public readonly troops: number,
+  ) {}
+}
+
 export class BuildUnitIntentEvent implements GameEvent {
   constructor(
     public readonly unit: UnitType,
@@ -217,6 +224,9 @@ export class Transport {
     );
     this.eventBus.on(SendBoatAttackIntentEvent, (e) =>
       this.onSendBoatAttackIntent(e),
+    );
+    this.eventBus.on(SendAirAttackIntentEvent, (e) =>
+      this.onSendAirAttackIntent(e),
     );
     this.eventBus.on(SendTargetPlayerIntentEvent, (e) =>
       this.onSendTargetPlayerIntent(e),
@@ -483,6 +493,14 @@ export class Transport {
   private onSendBoatAttackIntent(event: SendBoatAttackIntentEvent) {
     this.sendIntent({
       type: "boat",
+      troops: event.troops,
+      dst: event.dst,
+    });
+  }
+
+  private onSendAirAttackIntent(event: SendAirAttackIntentEvent) {
+    this.sendIntent({
+      type: "air_attack",
       troops: event.troops,
       dst: event.dst,
     });

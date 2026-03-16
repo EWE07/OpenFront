@@ -26,7 +26,8 @@ const DefaultKeybinds: Record<string, string> = {
   buildCity: "Digit1",
   buildFactory: "Digit2",
   buildPort: "Digit3",
-  buildDefensePost: "Digit4",
+  buildAirport: "Digit4",
+  buildDefensePost: "Quote",
   buildMissileSilo: "Digit5",
   buildSamLauncher: "Digit6",
   buildWarship: "Digit7",
@@ -605,6 +606,16 @@ export class UserSettingModal extends BaseModal {
         defaultKey="Digit0"
         .value=${this.getKeyValue("buildMIRV")}
         .display=${this.getKeyChar("buildMIRV")}
+        @change=${this.handleKeybindChange}
+      ></setting-keybind>
+
+      <setting-keybind
+        action="buildAirport"
+        label="Build Airport"
+        description="Place an airport to spawn trade jets"
+        defaultKey="Quote"
+        .value=${this.getKeyValue("buildAirport")}
+        .display=${this.getKeyChar("buildAirport")}
         @change=${this.handleKeybindChange}
       ></setting-keybind>
 
