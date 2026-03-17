@@ -284,6 +284,7 @@ export enum UnitType {
   Airport = "Airport",
   TradeJet = "Trade Jet",
   AirTransport = "Air Transport",
+  Barracks = "Barracks",
 }
 
 export enum TrainType {
@@ -314,6 +315,7 @@ export const Structures = unitTypeGroup([
   UnitType.Port,
   UnitType.Factory,
   UnitType.Airport,
+  UnitType.Barracks,
 ] as const);
 
 export const BuildMenus = unitTypeGroup([
@@ -384,6 +386,8 @@ export interface UnitParamsMap {
   [UnitType.City]: Record<string, never>;
 
   [UnitType.Airport]: Record<string, never>;
+
+  [UnitType.Barracks]: Record<string, never>;
 
   [UnitType.TradeJet]: {
     targetUnit: Unit;

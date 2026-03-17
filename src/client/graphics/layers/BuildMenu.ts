@@ -51,6 +51,18 @@ const airportIcon =
       `</svg>`,
   );
 
+// Barracks icon — crossed swords SVG inline
+const barracksIcon =
+  "data:image/svg+xml;utf8," +
+  encodeURIComponent(
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round">` +
+      `<line x1="4" y1="4" x2="20" y2="20"/>` +
+      `<polyline points="4,4 9,4 4,9"/>` +
+      `<line x1="20" y1="4" x2="4" y2="20"/>` +
+      `<polyline points="20,4 15,4 20,9"/>` +
+      `</svg>`,
+  );
+
 export interface BuildItemDisplay {
   unitType: PlayerBuildableUnitType;
   icon: string;
@@ -136,6 +148,13 @@ export const buildTable: BuildItemDisplay[][] = [
       icon: airportIcon,
       description: "Spawns trade jets that fly to allied airports for gold",
       key: "Airport",
+      countable: true,
+    },
+    {
+      unitType: UnitType.Barracks,
+      icon: barracksIcon,
+      description: "Boosts troop growth rate. Upgradeable for higher bonuses.",
+      key: "Barracks",
       countable: true,
     },
   ],

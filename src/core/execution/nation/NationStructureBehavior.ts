@@ -51,6 +51,10 @@ function getStructureRatios(
       ratioPerCity: 0.5,
       perceivedCostIncreasePerOwned: 1,
     },
+    [UnitType.Barracks]: {
+      ratioPerCity: 0.5,
+      perceivedCostIncreasePerOwned: 1,
+    },
     [UnitType.Factory]: {
       ratioPerCity: 0.75,
       perceivedCostIncreasePerOwned: 1,
@@ -119,6 +123,7 @@ export class NationStructureBehavior {
       UnitType.Port,
       UnitType.Factory,
       UnitType.Airport,
+      UnitType.Barracks,
       UnitType.SAMLauncher,
       UnitType.MissileSilo,
     ];
@@ -512,6 +517,8 @@ export class NationStructureBehavior {
         return this.portValue();
       case UnitType.Airport:
         return this.airportValue();
+      case UnitType.Barracks:
+        return this.barracksValue();
       case UnitType.DefensePost:
         return this.defensePostValue();
       case UnitType.SAMLauncher:
@@ -606,9 +613,7 @@ export class NationStructureBehavior {
       }
 
       // Prefer to be away from existing ports (complementary coverage)
-      const portTiles: Set<TileRef> = new Set(
-        otherPorts.map((u) => u.tile()),
-      );
+      const portTiles: Set<TileRef> = new Set(otherPorts.map((u) => u.tile()));
       if (portTiles.size > 0) {
         const [, closestPortDist] = closestTile(game, portTiles, tile);
         w += Math.min(closestPortDist, structureSpacing) * 0.3;
@@ -616,6 +621,41 @@ export class NationStructureBehavior {
 
       // Slight elevation preference
       w += game.magnitude(tile) * 0.3;
+
+      return w;
+    };
+  }
+
+  private barracksValue(): (tile: TileRef) => number {
+    const game = this.game;
+    const player = this.player;
+    const otherBarracks = player.units(UnitType.Barracks);
+    const borderTiles = player.borderTiles();
+    const { structureSpacing, borderSpacing } = this.spacingConstants();
+
+    return (tile) => {
+      let w = 0;
+
+      // Prefer to be away from other barracks
+      const barracksTiles: Set<TileRef> = new Set(
+        otherBarracks.map((u) => u.tile()),
+      );
+      barracksTiles.delete(tile);
+      if (barracksTiles.size > 0) {
+        const [, closestDist] = closestTile(game, barracksTiles, tile);
+        w += Math.min(closestDist, structureSpacing);
+      } else {
+        w += structureSpacing;
+      }
+
+      // Prefer to be somewhat away from the border (barracks are rear support)
+      if (borderTiles.size > 0) {
+        const [, closestBorderDist] = closestTile(game, borderTiles, tile);
+        w += Math.min(closestBorderDist, borderSpacing) * 0.4;
+      }
+
+      // Prefer higher elevation (safer rear positions)
+      w += game.magnitude(tile) * 0.4;
 
       return w;
     };
@@ -1003,6 +1043,7 @@ export class NationStructureBehavior {
         case UnitType.MissileSilo:
         case UnitType.Port:
         case UnitType.Airport:
+        case UnitType.Barracks:
           protectEntries.push({
             tile: unit.tile(),
             weight: weightByLevel ? unit.level() : 1,

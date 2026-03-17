@@ -34,6 +34,7 @@ const DefaultKeybinds: Record<string, string> = {
   buildAtomBomb: "Digit8",
   buildHydrogenBomb: "Digit9",
   buildMIRV: "Digit0",
+  buildBarracks: "Backslash",
   attackRatioDown: "KeyT",
   attackRatioUp: "KeyY",
   boatAttack: "KeyB",
@@ -613,9 +614,19 @@ export class UserSettingModal extends BaseModal {
         action="buildAirport"
         label="Build Airport"
         description="Place an airport to spawn trade jets"
-        defaultKey="Quote"
+        defaultKey="Digit4"
         .value=${this.getKeyValue("buildAirport")}
         .display=${this.getKeyChar("buildAirport")}
+        @change=${this.handleKeybindChange}
+      ></setting-keybind>
+
+      <setting-keybind
+        action="buildBarracks"
+        label="Build Barracks"
+        description="Place a barracks to boost troop growth rate"
+        defaultKey="Backslash"
+        .value=${this.getKeyValue("buildBarracks")}
+        .display=${this.getKeyChar("buildBarracks")}
         @change=${this.handleKeybindChange}
       ></setting-keybind>
 

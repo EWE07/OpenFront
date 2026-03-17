@@ -468,6 +468,17 @@ export class DefaultConfig implements Config {
           upgradable: true,
         };
         break;
+      case UnitType.Barracks:
+        info = {
+          cost: this.costWrapper(
+            (numUnits: number) =>
+              Math.min(750_000, Math.pow(2, numUnits) * 100_000),
+            UnitType.Barracks,
+          ),
+          constructionDuration: this.instantBuild() ? 0 : 2 * 10,
+          upgradable: true,
+        };
+        break;
       case UnitType.TradeJet:
         info = {
           cost: () => 0n,
@@ -763,6 +774,17 @@ export class DefaultConfig implements Config {
 
   tradeJetShortRangeDebuff(): number {
     return 200;
+  }
+
+  // Barracks: radius of troop bonus effect (in tiles)
+  barracksRange(): number {
+    return 30;
+  }
+
+  // Flat troop bonus added per tick per barracks level
+  // Level 1 = +3/tick, Level 2 = +6/tick, Level 3 = +9/tick, etc.
+  barracksTroopBonus(level: number): number {
+    return level * 3;
   }
 
   attackAmount(attacker: Player, defender: Player | TerraNullius) {

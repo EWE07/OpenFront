@@ -39,6 +39,18 @@ const airportIcon =
       `</svg>`,
   );
 
+// Barracks icon — crossed swords inline SVG
+const barracksIcon =
+  "data:image/svg+xml;utf8," +
+  encodeURIComponent(
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round">` +
+      `<line x1="4" y1="4" x2="20" y2="20"/>` +
+      `<polyline points="4,4 9,4 4,9"/>` +
+      `<line x1="20" y1="4" x2="4" y2="20"/>` +
+      `<polyline points="20,4 15,4 20,9"/>` +
+      `</svg>`,
+  );
+
 @customElement("unit-display")
 export class UnitDisplay extends LitElement implements Layer {
   public game: GameView;
@@ -54,6 +66,7 @@ export class UnitDisplay extends LitElement implements Layer {
   private _defensePost = 0;
   private _samLauncher = 0;
   private _airport = 0;
+  private _barracks = 0;
   private allDisabled = false;
   private _hoveredUnit: PlayerBuildableUnitType | null = null;
 
@@ -121,6 +134,7 @@ export class UnitDisplay extends LitElement implements Layer {
     this._factories = player.totalUnitLevels(UnitType.Factory);
     this._warships = player.totalUnitLevels(UnitType.Warship);
     this._airport = player.totalUnitLevels(UnitType.Airport);
+    this._barracks = player.totalUnitLevels(UnitType.Barracks);
     this.requestUpdate();
   }
 
@@ -219,6 +233,13 @@ export class UnitDisplay extends LitElement implements Layer {
             UnitType.DefensePost,
             "defense_post",
             this.keybinds["buildDefensePost"]?.key ?? "'",
+          )}
+          ${this.renderUnitItem(
+            barracksIcon,
+            this._barracks,
+            UnitType.Barracks,
+            "barracks",
+            this.keybinds["buildBarracks"]?.key ?? "\\",
           )}
         </div>
       </div>

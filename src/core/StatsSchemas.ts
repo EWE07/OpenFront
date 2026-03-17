@@ -36,6 +36,7 @@ export const otherUnits = [
   "saml",
   "fact",
   "airp",
+  "brrk",
 ] as const;
 export const OtherUnitSchema = z.enum(otherUnits);
 export type OtherUnit = z.infer<typeof OtherUnitSchema>;

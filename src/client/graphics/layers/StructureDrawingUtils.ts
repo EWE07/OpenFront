@@ -26,6 +26,7 @@ export const STRUCTURE_SHAPES: Partial<Record<UnitType, ShapeType>> = {
   [UnitType.HydrogenBomb]: "cross",
   [UnitType.MIRV]: "cross",
   [UnitType.Airport]: "hexagon",
+  [UnitType.Barracks]: "diamond",
 };
 export const LEVEL_SCALE_FACTOR = 3;
 export const ICON_SCALE_FACTOR_ZOOMED_IN = 3.5;
@@ -40,6 +41,7 @@ export const ICON_SIZE = {
   triangle: 28,
   cross: 20,
   hexagon: 30,
+  diamond: 22,
 };
 export const OFFSET_ZOOM_Y = 4;
 
@@ -50,7 +52,8 @@ export type ShapeType =
   | "octagon"
   | "circle"
   | "cross"
-  | "hexagon";
+  | "hexagon"
+  | "diamond";
 
 export class SpriteFactory {
   private theme: Theme;
@@ -422,6 +425,18 @@ export class SpriteFactory {
         break;
       }
 
+      case "diamond": {
+        context.beginPath();
+        context.moveTo(halfIconSize, 1); // top
+        context.lineTo(iconSize - 1, halfIconSize); // right
+        context.lineTo(halfIconSize, iconSize - 1); // bottom
+        context.lineTo(1, halfIconSize); // left
+        context.closePath();
+        context.fill();
+        context.stroke();
+        break;
+      }
+
       case "circle":
         context.beginPath();
         context.arc(
@@ -448,6 +463,12 @@ export class SpriteFactory {
         iconSize,
         owner.structureColors().dark.toRgbString(),
       );
+    } else if (structureType === UnitType.Barracks && renderIcon) {
+      this.drawBarracksSymbol(
+        context,
+        iconSize,
+        owner.structureColors().dark.toRgbString(),
+      );
     } else if (structureInfo?.image && renderIcon) {
       const SHAPE_OFFSETS = {
         triangle: [6, 11],
@@ -457,6 +478,7 @@ export class SpriteFactory {
         circle: [6, 6],
         cross: [0, 0],
         hexagon: [7, 7],
+        diamond: [6, 6],
       };
       const [offsetX, offsetY] = SHAPE_OFFSETS[shape] || [0, 0];
       context.drawImage(
@@ -581,6 +603,57 @@ export class SpriteFactory {
     ctx.lineTo(s * 0.38, s * 0.72); // right tail
     ctx.closePath();
     ctx.fill();
+
+    ctx.restore();
+  }
+
+  /**
+   * Draws a crossed-swords ⚔ symbol for the Barracks structure.
+   * Two diagonal lines crossing in the center with arrow-like tips.
+   */
+  private drawBarracksSymbol(
+    ctx: CanvasRenderingContext2D,
+    iconSize: number,
+    color: string,
+  ): void {
+    const cx = iconSize / 2;
+    const cy = iconSize / 2;
+    const s = iconSize * 0.22;
+
+    ctx.save();
+    ctx.strokeStyle = color;
+    ctx.fillStyle = color;
+    ctx.lineWidth = iconSize * 0.07;
+    ctx.lineCap = "round";
+    ctx.translate(cx, cy);
+
+    // First sword: top-left to bottom-right
+    ctx.beginPath();
+    ctx.moveTo(-s, -s);
+    ctx.lineTo(s, s);
+    ctx.stroke();
+
+    // First sword tip (top-left arrowhead)
+    ctx.beginPath();
+    ctx.moveTo(-s, -s);
+    ctx.lineTo(-s * 0.5, -s);
+    ctx.moveTo(-s, -s);
+    ctx.lineTo(-s, -s * 0.5);
+    ctx.stroke();
+
+    // Second sword: top-right to bottom-left
+    ctx.beginPath();
+    ctx.moveTo(s, -s);
+    ctx.lineTo(-s, s);
+    ctx.stroke();
+
+    // Second sword tip (top-right arrowhead)
+    ctx.beginPath();
+    ctx.moveTo(s, -s);
+    ctx.lineTo(s * 0.5, -s);
+    ctx.moveTo(s, -s);
+    ctx.lineTo(s, -s * 0.5);
+    ctx.stroke();
 
     ctx.restore();
   }

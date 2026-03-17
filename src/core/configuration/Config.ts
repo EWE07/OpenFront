@@ -138,6 +138,8 @@ export interface Config {
     numTradeJets: number,
   ): number;
   tradeJetShortRangeDebuff(): number;
+  barracksRange(): number;
+  barracksTroopBonus(level: number): number;
   trainGold(
     rel: "self" | "team" | "ally" | "other",
     citiesVisited: number,

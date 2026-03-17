@@ -1,9 +1,10 @@
 import { Execution, Game, Player, Tick, Unit, UnitType } from "../game/Game";
 import { TileRef } from "../game/GameMap";
+import { AirportExecution } from "./AirportExecution";
+import { BarracksExecution } from "./BarracksExecution";
 import { CityExecution } from "./CityExecution";
 import { DefensePostExecution } from "./DefensePostExecution";
 import { FactoryExecution } from "./FactoryExecution";
-import { AirportExecution } from "./AirportExecution";
 import { MirvExecution } from "./MIRVExecution";
 import { MissileSiloExecution } from "./MissileSiloExecution";
 import { NukeExecution } from "./NukeExecution";
@@ -148,6 +149,9 @@ export class ConstructionExecution implements Execution {
       case UnitType.Airport:
         this.mg.addExecution(new AirportExecution(this.structure!));
         break;
+      case UnitType.Barracks:
+        this.mg.addExecution(new BarracksExecution(this.structure!));
+        break;
       default:
         console.warn(
           `unit type ${this.constructionType} cannot be constructed`,
@@ -165,6 +169,7 @@ export class ConstructionExecution implements Execution {
       case UnitType.City:
       case UnitType.Factory:
       case UnitType.Airport:
+      case UnitType.Barracks:
         return true;
       default:
         return false;

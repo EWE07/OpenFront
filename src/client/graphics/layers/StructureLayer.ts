@@ -70,9 +70,14 @@ export class StructureLayer implements Layer {
       territoryRadius: BASE_TERRITORY_RADIUS * RADIUS_SCALE_FACTOR,
     },
     [UnitType.Airport]: {
-      icon: "", // set dynamically in constructor from generated canvas
+      icon: "", // generated in constructor
       borderRadius: BASE_BORDER_RADIUS * RADIUS_SCALE_FACTOR,
       territoryRadius: BASE_TERRITORY_RADIUS * RADIUS_SCALE_FACTOR,
+    },
+    [UnitType.Barracks]: {
+      icon: "", // generated in constructor
+      borderRadius: BASE_BORDER_RADIUS * RADIUS_SCALE_FACTOR * 0.5,
+      territoryRadius: BASE_TERRITORY_RADIUS * RADIUS_SCALE_FACTOR * 0.5,
     },
   };
 
@@ -89,6 +94,7 @@ export class StructureLayer implements Layer {
 
     // Generate the Airport icon as a data URL (no external PNG needed)
     this.generateAndLoadAirportIcon();
+    this.generateAndLoadBarracksIcon();
 
     this.loadIconData();
   }
@@ -98,7 +104,7 @@ export class StructureLayer implements Layer {
    * HTMLImageElement, then registers it for the Airport unit type.
    */
   private generateAndLoadAirportIcon(): void {
-    const size = 64;
+    const size = 32;
     const c = document.createElement("canvas");
     c.width = size;
     c.height = size;
@@ -151,6 +157,59 @@ export class StructureLayer implements Layer {
     };
   }
 
+  private generateAndLoadBarracksIcon(): void {
+    const size = 32;
+    const c = document.createElement("canvas");
+    c.width = size;
+    c.height = size;
+    const ctx = c.getContext("2d")!;
+    ctx.clearRect(0, 0, size, size);
+
+    const cx = size / 2;
+    const cy = size / 2;
+    const s = size * 0.22;
+
+    ctx.strokeStyle = "white";
+    ctx.fillStyle = "white";
+    ctx.lineWidth = size * 0.07;
+    ctx.lineCap = "round";
+    ctx.save();
+    ctx.translate(cx, cy);
+
+    // Crossed swords — first diagonal
+    ctx.beginPath();
+    ctx.moveTo(-s, -s);
+    ctx.lineTo(s, s);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(-s, -s);
+    ctx.lineTo(-s * 0.5, -s);
+    ctx.moveTo(-s, -s);
+    ctx.lineTo(-s, -s * 0.5);
+    ctx.stroke();
+
+    // Second diagonal
+    ctx.beginPath();
+    ctx.moveTo(s, -s);
+    ctx.lineTo(-s, s);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(s, -s);
+    ctx.lineTo(s * 0.5, -s);
+    ctx.moveTo(s, -s);
+    ctx.lineTo(s, -s * 0.5);
+    ctx.stroke();
+
+    ctx.restore();
+
+    const dataUrl = c.toDataURL("image/png");
+    const img = new Image();
+    img.src = dataUrl;
+    img.onload = () => {
+      this.unitIcons.set(UnitType.Barracks, img);
+    };
+  }
+
   private loadIcon(unitType: string, config: UnitRenderConfig) {
     const image = new Image();
     image.src = config.icon;
@@ -167,8 +226,9 @@ export class StructureLayer implements Layer {
 
   private loadIconData() {
     Object.entries(this.unitConfigs).forEach(([unitType, config]) => {
-      // Airport icon is generated programmatically in generateAndLoadAirportIcon
-      if (unitType === UnitType.Airport) return;
+      // Airport and Barracks icons are generated programmatically
+      if (unitType === UnitType.Airport || unitType === UnitType.Barracks)
+        return;
       this.loadIcon(unitType, config);
     });
   }
