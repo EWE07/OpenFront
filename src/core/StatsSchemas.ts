@@ -48,7 +48,8 @@ export type OtherUnitType =
   | UnitType.SAMLauncher
   | UnitType.Warship
   | UnitType.Factory
-  | UnitType.Airport;
+  | UnitType.Airport
+  | UnitType.Barracks;
 
 export const unitTypeToOtherUnit = {
   [UnitType.City]: "city",
@@ -59,6 +60,7 @@ export const unitTypeToOtherUnit = {
   [UnitType.Warship]: "wshp",
   [UnitType.Factory]: "fact",
   [UnitType.Airport]: "airp",
+  [UnitType.Barracks]: "brrk",
 } as const satisfies Record<OtherUnitType, OtherUnit>;
 
 // Attacks
